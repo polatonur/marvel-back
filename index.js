@@ -23,7 +23,8 @@ const User = mongoose.model("User", {
   hash: String,
   token: String,
   salt: String,
-  favories: { type: Array, default: [] },
+  favoris_comic: { type: Array, default: [] },
+  favoris_character: { type: Array, default: [] },
 });
 
 ////////////////////////// User login /////////////////////
@@ -43,7 +44,7 @@ app.post("/user/login", async (req, res) => {
 
       if (hash === hashToCompare) {
         res.status(200).json({
-          message: "password ok",
+          message: user,
         });
       } else {
         res.status(401).json({
@@ -82,7 +83,7 @@ app.post("/user/signup", async (req, res) => {
         salt: salt,
       });
       const newUser = await user.save();
-
+      console.log(newUser);
       res.status(200).json({
         newUser,
       });
@@ -91,15 +92,87 @@ app.post("/user/signup", async (req, res) => {
     console.log(error.message);
   }
 });
+//////////////////////////show fav rout /////////////////////
+app.post("/favoris", async (req, res) => {
+  console.log("show fav");
+  try {
+    const { token } = req.fields;
+    const user = await User.findOne({ token: token });
+    const favComics = user.favoris_comic;
+    const favCharacters = user.favoris_character;
+    res.status(200).json({
+      message: {
+        favComics: favComics,
+        favCharacters: favCharacters,
+      },
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
 
-////////////////////////// User favories /////////////////////
+//////////////////////////add character favories /////////////////////
+app.post("/character/favoris", async (req, res) => {
+  console.log("ch fav");
+  try {
+    const { token, elem } = req.fields;
+    const user = await User.updateOne(
+      { token: token },
+      { $addToSet: { favoris_character: [elem] } }
+    );
+    res.status(200).json({
+      message: user,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
+////////////////////////// add comic favories /////////////////////
+app.post("/comic/favoris", async (req, res) => {
+  console.log("com fav");
+
+  try {
+    const { token, elem } = req.fields;
+    const user = await User.updateOne(
+      { token: token },
+      { $addToSet: { favoris_comic: [elem] } }
+    );
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
 
 ////////////////////////// home route /////////////////////
 
-app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "welcome to marvel world",
-  });
+app.get("/", async (req, res) => {
+  try {
+    const comics10 = await axios.get(
+      `https://lereacteur-marvel-api.herokuapp.com/comics?limit=10&apiKey=${process.env.MARVEL_API_KEY}`
+    );
+    console.log(comics10.data);
+    const characters20 = await axios.get(
+      `https://lereacteur-marvel-api.herokuapp.com/characters?limit=20&apiKey=${process.env.MARVEL_API_KEY}`
+    );
+    console.log(characters20.data);
+    res.json({
+      comics: comics10.data,
+      characters: characters20.data,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({
+      message: error.message,
+    });
+  }
 });
 
 ////////////////////////// comics route /////////////////////
@@ -184,4 +257,4 @@ app.all("*", (req, res) => {
   });
 });
 
-app.listen(5000, () => console.log("server  is running"));
+app.listen(process.env.PORT || 5000, () => console.log("Server is running..."));
