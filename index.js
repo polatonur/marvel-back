@@ -151,6 +151,49 @@ app.post("/comic/favoris", async (req, res) => {
   }
 });
 
+// delete fav route
+
+app.delete("/delete", async (req, res) => {
+  const { id, genre, token } = req.fields;
+  console.log("delete", id, genre, token);
+
+  try {
+    const user = await User.findOne({ token: token });
+    const favComics = user.favoris_comic;
+    const favCharacters = user.favoris_character;
+    if (genre === "char") {
+      for (let i = 0; i < favCharacters.length; i++) {
+        if (String(favCharacters[i]._id) === String(id)) {
+          favCharacters.splice(i, 1);
+          user.favoris_character = favCharacters;
+          await user.save();
+          break;
+        }
+      }
+    } else {
+      for (let i = 0; i < favComics.length; i++) {
+        if (String(favComics[i]._id) === String(id)) {
+          favComics.splice(i, 1);
+          user.favoris_comic = favComics;
+          await user.save();
+          break;
+        }
+      }
+    }
+    res.status(200).json({
+      message: {
+        favComics,
+        favCharacters,
+      },
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
+
 ////////////////////////// home route /////////////////////
 
 app.get("/", async (req, res) => {
