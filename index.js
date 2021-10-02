@@ -153,9 +153,10 @@ app.post("/comic/favoris", async (req, res) => {
 
 // delete fav route
 
-app.delete("/delete", async (req, res) => {
+app.post("/delete", async (req, res) => {
+  console.log(req.fields);
   const { id, genre, token } = req.fields;
-  console.log("delete", id, genre, token);
+  // console.log("delete", id, genre, token);
 
   try {
     const user = await User.findOne({ token: token });
