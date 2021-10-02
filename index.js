@@ -53,7 +53,7 @@ app.post("/user/login", async (req, res) => {
       }
     } else {
       res.status(401).json({
-        message: "user not found, Unauthorized",
+        message: "User not found, Unauthorized",
       });
     }
   } catch (error) {}
@@ -68,7 +68,7 @@ app.post("/user/signup", async (req, res) => {
     const user = await User.findOne({ email: email });
     if (user) {
       res.status(409).json({
-        message: "user already exist with this mail",
+        message: "User already exist with this mail",
       });
     } else {
       const salt = uid2(16);
